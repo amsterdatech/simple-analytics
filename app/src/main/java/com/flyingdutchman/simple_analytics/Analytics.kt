@@ -1,16 +1,10 @@
 package com.flyingdutchman.simple_analytics
 
-import android.content.Context
-
 interface Analytics {
     fun track(setup: EventBuilder.() -> Unit = {})
 }
 
-class AnalyticsImpl(
-    private val context: Context,
-    private val trackers: MutableList<Tracker>
-) : Analytics {
-
+class AnalyticsImpl(private val trackers: MutableList<Tracker>) : Analytics {
     init {
         trackers.forEach {
             if (it.isAnalyticsEnabled()) {
@@ -26,7 +20,7 @@ class AnalyticsImpl(
         val event = eventBuilder.build()
 
         event?.let { event ->
-            if (event is EventTrack) {
+            if (event is Event) {
                 trackers.forEach { tracker: Tracker ->
                     tracker.trackEvent(event)
                 }
