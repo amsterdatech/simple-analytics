@@ -1,9 +1,9 @@
 package com.flyingdutchman.simple_analytics
 
 import androidx.annotation.StringDef
-import com.flyingdutchman.simple_analytics.EVENT.Companion.EXCEPTION
-import com.flyingdutchman.simple_analytics.EVENT.Companion.PAGE_VIEW
-import com.flyingdutchman.simple_analytics.EVENT.Companion.STACK_TRACE
+import com.flyingdutchman.simple_analytics.EVENT_NAME.Companion.EXCEPTION
+import com.flyingdutchman.simple_analytics.EVENT_NAME.Companion.PAGE_VIEW
+import com.flyingdutchman.simple_analytics.EVENT_NAME.Companion.STACK_TRACE
 
 interface Tracker {
 
@@ -21,27 +21,31 @@ interface Tracker {
 }
 
 interface Trackable{
-    @EVENT val eventName: String
+    @EVENT_NAME val eventName: String
     val properties: Map<String, String>?
 }
 
 sealed class Event : Trackable {
     data class EventTrack(
-        @EVENT override val eventName: String,
+        @EVENT_NAME override val eventName: String,
         override val properties: Map<String, String>? = null
-    ) : Event()
+    ) : Event(){
+        companion object
+    }
 
     data class CrashTrack(
-        @EVENT override val eventName: String,
+        @EVENT_NAME override val eventName: String,
         override val properties: Map<String, String>? = null
-    ) : Event()
+    ) : Event(){
+        companion object
+    }
 
 }
 
 
 @Retention(AnnotationRetention.SOURCE)
 @StringDef(PAGE_VIEW, EXCEPTION, STACK_TRACE)
-annotation class EVENT {
+annotation class EVENT_NAME {
     companion object {
         const val PAGE_VIEW = "pageView"
         const val EXCEPTION = "exception"

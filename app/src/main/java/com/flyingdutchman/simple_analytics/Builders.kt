@@ -24,7 +24,15 @@ open class EventBuilder(var name: String? = null) {
 
     fun build(): Trackable? {
         if (name.isNullOrBlank()) throw IllegalArgumentException("Events should contain a name look at DISPLAY/EVENT annotation class")
-        name?.let { return EventTrack(it, data) }
+        name?.let {
+            return when (it) {
+                EVENT_NAME.PAGE_VIEW -> Event.EventTrack(it, data)
+                EVENT_NAME.EXCEPTION -> Event.CrashTrack(it, data)
+                else -> {
+                    null
+                }
+            }
+        }
         return null
     }
 }
