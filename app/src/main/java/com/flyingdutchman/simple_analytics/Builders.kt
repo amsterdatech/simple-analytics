@@ -1,19 +1,24 @@
 package com.flyingdutchman.simple_analytics
 
+import android.content.Context
+
 annotation class DslAnalytics
 
 @DslAnalytics
 open class EventBuilder(var name: String? = null) {
-    var data: MutableMap<String, String>? = null
+    val data: MutableMap<String, String>? by lazy {
+        mutableMapOf<String, String>()
+    }
 
-    private fun initData() {
-        if (data == null) {
-            data = mutableMapOf()
+    inline fun String.to(value: String) {
+        data?.let {
+            if (!it.containsKey(this)) {
+                it[this] = value
+            }
         }
     }
 
     fun put(key: String, value: String): EventBuilder {
-        initData()
         data?.let {
             if (!it.containsKey(key)) {
                 it[key] = value
@@ -26,13 +31,30 @@ open class EventBuilder(var name: String? = null) {
         if (name.isNullOrBlank()) throw IllegalArgumentException("Events should contain a name look at DISPLAY/EVENT annotation class")
         name?.let {
             return when (it) {
-                EVENT_NAME.PAGE_VIEW -> Event.EventTrack(it, data)
-                EVENT_NAME.EXCEPTION -> Event.CrashTrack(it, data)
+                EventName.PAGE_VIEW -> Event.EventTrack(it, data)
+                EventName.EXCEPTION -> Event.CrashTrack(it, data)
                 else -> {
                     null
                 }
             }
         }
         return null
+    }
+}
+
+fun analytics(context: Context, initializer: AnalyticsBuilder.() -> Unit = {}): Analytics =
+    Analytics.with(context, initializer)
+
+fun analytics(context: Context): Analytics = Analytics.with(context) {
+
+}
+
+@DslAnalytics
+class AnalyticsBuilder(val context: Context) {
+
+    private val trackers = mutableListOf<Tracker>()
+
+    fun build(): Analytics {
+        return AnalyticsImpl(trackers = trackers)
     }
 }
