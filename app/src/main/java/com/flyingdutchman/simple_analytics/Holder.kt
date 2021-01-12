@@ -1,12 +1,12 @@
 package com.flyingdutchman.simple_analytics
 
-open class Holder<out T : Any, Context, SnitchBuilder>(creator: (Context, SnitchBuilder) -> T) {
-    private var creator: ((Context, SnitchBuilder) -> T)? = creator
+open class Holder<out T : Any, Context, AnalyticsBuilder>(creator: (Context, AnalyticsBuilder) -> T) {
+    private var creator: ((Context, AnalyticsBuilder) -> T)? = creator
     @Volatile
     private var instance: T? = null
 
 
-    fun with(context: Context, builder: SnitchBuilder): T {
+    fun with(context: Context, builder: AnalyticsBuilder): T {
         val i = instance
         if (i != null) {
             return i

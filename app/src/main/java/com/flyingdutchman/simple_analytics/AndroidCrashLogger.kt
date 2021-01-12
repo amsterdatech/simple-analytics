@@ -23,6 +23,13 @@ class AndroidCrashLogger(private val context: Context) : CrashReporter,
     Thread.UncaughtExceptionHandler {
     private val TAG = this::class.java.simpleName
 
+    private fun tag(): String =
+        "${context.applicationInfo.name}:${context.applicationInfo.packageName}:$TAG"
+
+
+    private var defaultHandler: Thread.UncaughtExceptionHandler? =
+        Thread.getDefaultUncaughtExceptionHandler()
+
     override fun simulateCrash() {
         //TODO Here you can throw a RuntimeException or use a related method of your crash report SDK
     }
@@ -34,19 +41,19 @@ class AndroidCrashLogger(private val context: Context) : CrashReporter,
     override fun logLevel(logLevel: Int) {}
 
     override fun start() {
-        context.applicationContext.mainLooper.thread.uncaughtExceptionHandler = this
+        wrapDefaultExceptionHandler()
     }
 
     override fun apiKey(): String {
         val apiKey = UUID.randomUUID()
-        Log.d(TAG, "$TAG generate an random uuid as apiKey: $apiKey")
+        Log.d(TAG, "${tag()} generate an random uuid as apiKey: $apiKey")
         return apiKey.toString()
     }
 
     override fun trackEvent(eventTrack: Event) {
         when (eventTrack) {
             is Event.CrashTrack -> {
-                Log.e(TAG, "$TAG Report crash: ${eventTrack.eventName}")
+                Log.e(TAG, "${tag()} Report crash: ${eventTrack.eventName}")
             }
             else -> {
                 //TODO You can choose what kind of events you want to be aware about
@@ -59,8 +66,6 @@ class AndroidCrashLogger(private val context: Context) : CrashReporter,
      * Besides, you shouldn't rely on heavy libraries like RxJava, but Coroutines or Executors are easy to follow as well
      */
     override fun uncaughtException(thread: Thread, throwable: Throwable) {
-        val defaultHandler = Thread.getDefaultUncaughtExceptionHandler()
-
         try {
             analytics(context)
                 .track {
@@ -73,7 +78,7 @@ class AndroidCrashLogger(private val context: Context) : CrashReporter,
             /**
              * Dispatch to default Android handler to show system dialog or finish the app (System.exit(0) or Activity.finish())
              */
-            defaultHandler.uncaughtException(thread, throwable)
+            defaultHandler?.uncaughtException(thread, throwable)
         }
     }
 
@@ -86,6 +91,10 @@ class AndroidCrashLogger(private val context: Context) : CrashReporter,
             res.append(EventName.PROPERTY_LINE_NUMBER, e.lineNumber.toString())
         }
         return res.toString()
+    }
+
+    private fun wrapDefaultExceptionHandler() {
+        context.applicationContext.mainLooper.thread.uncaughtExceptionHandler = this
     }
 
     private fun extractStackTrace(msg: String?, th: Throwable?): String {

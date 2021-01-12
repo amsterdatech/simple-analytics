@@ -54,6 +54,10 @@ class AnalyticsBuilder(val context: Context) {
 
     private val trackers = mutableListOf<Tracker>()
 
+    fun kit(tracker: Tracker) = apply {
+        trackers += tracker
+    }
+
     fun build(): Analytics {
         return AnalyticsImpl(trackers = trackers)
     }
